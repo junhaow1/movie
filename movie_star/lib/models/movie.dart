@@ -2,18 +2,18 @@ class Movie {
   final int id;
   final String title;
   final String overview;
-  final String? posterPath;
-  final String? backdropPath;
+  final String posterUrl;
+  final String backdropUrl;
   final double voteAverage;
-  final String releaseDate;
+  final DateTime releaseDate;
   final List<int> genreIds;
 
   Movie({
     required this.id,
     required this.title,
     required this.overview,
-    this.posterPath,
-    this.backdropPath,
+    required this.posterUrl,
+    required this.backdropUrl,
     required this.voteAverage,
     required this.releaseDate,
     required this.genreIds,
@@ -24,21 +24,12 @@ class Movie {
       id: json['id'],
       title: json['title'],
       overview: json['overview'],
-      posterPath: json['poster_path'],
-      backdropPath: json['backdrop_path'],
+      posterUrl: 'https://image.tmdb.org/t/p/w500${json['poster_path']}',
+      backdropUrl:
+          'https://image.tmdb.org/t/p/original${json['backdrop_path']}',
       voteAverage: (json['vote_average'] as num).toDouble(),
-      releaseDate: json['release_date'],
+      releaseDate: DateTime.parse(json['release_date']),
       genreIds: List<int>.from(json['genre_ids'] ?? []),
     );
   }
-
-  String get posterUrl =>
-      posterPath != null
-          ? 'https://image.tmdb.org/t/p/w500$posterPath'
-          : 'https://via.placeholder.com/500x750?text=No+Image';
-
-  String get backdropUrl =>
-      backdropPath != null
-          ? 'https://image.tmdb.org/t/p/original$backdropPath'
-          : 'https://via.placeholder.com/1920x1080?text=No+Image';
 }

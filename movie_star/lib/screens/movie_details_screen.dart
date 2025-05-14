@@ -79,7 +79,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                       const Icon(Icons.calendar_today),
                       const SizedBox(width: 4),
                       Text(
-                        widget.movie.releaseDate,
+                        '${widget.movie.releaseDate.day}/${widget.movie.releaseDate.month}/${widget.movie.releaseDate.year}',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
