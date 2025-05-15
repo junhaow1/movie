@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/coming_soon_screen.dart';
+import 'screens/downloads_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/search_screen.dart';
 
 void main() {
@@ -39,8 +41,8 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const ComingSoonScreen(),
-    const Center(child: Text('Downloads')), // Placeholder for Downloads screen
-    const Center(child: Text('Profile')), // Placeholder for Profile screen
+    const DownloadsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
