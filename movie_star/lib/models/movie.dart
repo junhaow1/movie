@@ -32,4 +32,23 @@ class Movie {
       genreIds: List<int>.from(json['genre_ids'] ?? []),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'overview': overview,
+      'poster_path': posterUrl.replaceAll(
+        'https://image.tmdb.org/t/p/w500',
+        '',
+      ),
+      'backdrop_path': backdropUrl.replaceAll(
+        'https://image.tmdb.org/t/p/original',
+        '',
+      ),
+      'vote_average': voteAverage,
+      'release_date': releaseDate.toIso8601String(),
+      'genre_ids': genreIds,
+    };
+  }
 }

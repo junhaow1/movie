@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/movie.dart';
 import '../services/movie_service.dart';
+import '../services/favorites_service.dart';
 import 'movie_details_screen.dart';
 
 class ComingSoonScreen extends StatefulWidget {
-  const ComingSoonScreen({super.key});
+  final FavoritesService favoritesService;
+
+  const ComingSoonScreen({super.key, required this.favoritesService});
 
   @override
   State<ComingSoonScreen> createState() => _ComingSoonScreenState();
@@ -13,9 +16,9 @@ class ComingSoonScreen extends StatefulWidget {
 
 class _ComingSoonScreenState extends State<ComingSoonScreen> {
   final MovieService _movieService = MovieService();
-  List<Movie> _upcomingMovies = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
   String? _error;
+  List<Movie> _upcomingMovies = [];
 
   @override
   void initState() {
@@ -55,109 +58,47 @@ class _ComingSoonScreenState extends State<ComingSoonScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(_error!, style: const TextStyle(color: Colors.red)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadUpcomingMovies,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
+              ? Center(child: Text(_error!))
               : ListView.builder(
                 itemCount: _upcomingMovies.length,
                 itemBuilder: (context, index) {
                   final movie = _upcomingMovies[index];
-                  return Container(
-                    height: 200,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      image: DecorationImage(
-                        image: CachedNetworkImageProvider(movie.backdropUrl),
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: CachedNetworkImage(
+                        imageUrl: movie.posterUrl,
+                        width: 50,
+                        height: 75,
                         fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                          Colors.black.withOpacity(0.3),
-                          BlendMode.darken,
-                        ),
-                      ),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => MovieDetailsScreen(movie: movie),
+                        placeholder:
+                            (context, url) => const Center(
+                              child: CircularProgressIndicator(),
                             ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                movie.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      'Coming ${movie.releaseDate.day}/${movie.releaseDate.month}/${movie.releaseDate.year}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(
-                                    Icons.notifications_none,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    'Remind Me',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                        errorWidget:
+                            (context, url, error) => const Icon(Icons.error),
                       ),
                     ),
+                    title: Text(
+                      movie.title,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      'Release Date: ${movie.releaseDate.day}/${movie.releaseDate.month}/${movie.releaseDate.year}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => MovieDetailsScreen(
+                                movie: movie,
+                                favoritesService: widget.favoritesService,
+                              ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

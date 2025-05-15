@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/movie.dart';
-import '../services/movie_service.dart';
+import '../services/favorites_service.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final Movie movie;
+  final FavoritesService favoritesService;
 
-  const MovieDetailsScreen({super.key, required this.movie});
+  const MovieDetailsScreen({
+    super.key,
+    required this.movie,
+    required this.favoritesService,
+  });
 
   @override
   State<MovieDetailsScreen> createState() => _MovieDetailsScreenState();
@@ -16,13 +21,39 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   bool _isFavorite = false;
 
   @override
+  void initState() {
+    super.initState();
+    _checkFavoriteStatus();
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    final isFavorite = await widget.favoritesService.isFavorite(widget.movie);
+    setState(() {
+      _isFavorite = isFavorite;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_isFavorite) {
+      await widget.favoritesService.removeFromFavorites(widget.movie);
+    } else {
+      await widget.favoritesService.addToFavorites(widget.movie);
+    }
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            backgroundColor: Colors.black,
             flexibleSpace: FlexibleSpaceBar(
               background: CachedNetworkImage(
                 imageUrl: widget.movie.backdropUrl,
@@ -30,69 +61,83 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 placeholder:
                     (context, url) =>
                         const Center(child: CircularProgressIndicator()),
-                errorWidget:
-                    (context, url, error) => const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           widget.movie.title,
-                          style: Theme.of(context).textTheme.headlineMedium,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       IconButton(
                         icon: Icon(
                           _isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavorite ? Colors.red : null,
+                          color: _isFavorite ? Colors.red : Colors.white,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isFavorite = !_isFavorite;
-                          });
-                        },
+                        onPressed: _toggleFavorite,
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber),
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 4),
                       Text(
                         widget.movie.voteAverage.toStringAsFixed(1),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      const Icon(Icons.calendar_today),
+                      const Icon(
+                        Icons.calendar_today,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${widget.movie.releaseDate.day}/${widget.movie.releaseDate.month}/${widget.movie.releaseDate.year}',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'Overview',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     widget.movie.overview,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),

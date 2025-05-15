@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import '../services/favorites_service.dart';
+import 'my_list_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final FavoritesService favoritesService;
+
+  const ProfileScreen({super.key, required this.favoritesService});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -84,7 +88,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ]),
           _buildSection('Account', [
             _buildListTile('My List', Icons.favorite, () {
-              // TODO: Navigate to My List
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => MyListScreen(
+                        favoritesService: widget.favoritesService,
+                      ),
+                ),
+              );
             }),
             _buildListTile('Watch History', Icons.history, () {
               // TODO: Navigate to Watch History

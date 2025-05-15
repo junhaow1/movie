@@ -2,21 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/movie.dart';
 import '../services/movie_service.dart';
+import '../services/favorites_service.dart';
 import 'movie_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final FavoritesService favoritesService;
+
+  const SearchScreen({super.key, required this.favoritesService});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final MovieService _movieService = MovieService();
   final TextEditingController _searchController = TextEditingController();
-  List<Movie> _searchResults = [];
+  final MovieService _movieService = MovieService();
   bool _isLoading = false;
   String? _error;
+  List<Movie> _searchResults = [];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _searchMovies(String query) async {
     if (query.isEmpty) {
@@ -47,27 +56,16 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _searchController,
-          decoration: InputDecoration(
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
             hintText: 'Search movies...',
+            hintStyle: TextStyle(color: Colors.grey),
             border: InputBorder.none,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                _searchMovies('');
-              },
-            ),
           ),
           onSubmitted: _searchMovies,
         ),
@@ -76,22 +74,14 @@ class _SearchScreenState extends State<SearchScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(_error!, style: const TextStyle(color: Colors.red)),
-                  ],
+              ? Center(child: Text(_error!))
+              : _searchResults.isEmpty
+              ? const Center(
+                child: Text(
+                  'Search for movies to get started',
+                  style: TextStyle(color: Colors.grey),
                 ),
               )
-              : _searchResults.isEmpty
-              ? const Center(child: Text('Search for movies to see results'))
               : ListView.builder(
                 itemCount: _searchResults.length,
                 itemBuilder: (context, index) {
@@ -109,22 +99,26 @@ class _SearchScreenState extends State<SearchScreen> {
                               child: CircularProgressIndicator(),
                             ),
                         errorWidget:
-                            (context, url, error) => const Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                            ),
+                            (context, url, error) => const Icon(Icons.error),
                       ),
                     ),
-                    title: Text(movie.title),
+                    title: Text(
+                      movie.title,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                     subtitle: Text(
-                      'Rating: ${movie.voteAverage.toStringAsFixed(1)}',
+                      '⭐ ${movie.voteAverage.toStringAsFixed(1)}',
+                      style: const TextStyle(color: Colors.grey),
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => MovieDetailsScreen(movie: movie),
+                              (context) => MovieDetailsScreen(
+                                movie: movie,
+                                favoritesService: widget.favoritesService,
+                              ),
                         ),
                       );
                     },
