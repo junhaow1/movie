@@ -23,11 +23,24 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Movie> _nowPlayingMovies = [];
   List<Movie> _topRatedMovies = [];
   List<Movie> _upcomingMovies = [];
+  final Map<String, ScrollController> _scrollControllers = {};
 
   @override
   void initState() {
     super.initState();
+    _scrollControllers['popular'] = ScrollController();
+    _scrollControllers['nowPlaying'] = ScrollController();
+    _scrollControllers['topRated'] = ScrollController();
+    _scrollControllers['upcoming'] = ScrollController();
     _loadAllMovies();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _scrollControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _loadAllMovies() async {
@@ -57,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildMovieRow(String title, List<Movie> movies) {
+  Widget _buildMovieRow(String title, List<Movie> movies, String key) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -74,56 +87,50 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         SizedBox(
           height: 200,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (ScrollNotification notification) {
-              if (notification is ScrollEndNotification) {
-                // You can add additional logic here when scrolling ends
-              }
-              return true;
-            },
-            child: Scrollbar(
-              thickness: 6,
-              radius: const Radius.circular(3),
-              thumbVisibility: true,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                itemCount: movies.length,
-                itemBuilder: (context, index) {
-                  final movie = movies[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => MovieDetailsScreen(
-                                  movie: movie,
-                                  favoritesService: widget.favoritesService,
-                                ),
-                          ),
-                        );
-                      },
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: CachedNetworkImage(
-                          imageUrl: movie.posterUrl,
-                          width: 130,
-                          fit: BoxFit.cover,
-                          placeholder:
-                              (context, url) => const Center(
-                                child: CircularProgressIndicator(),
+          child: Scrollbar(
+            controller: _scrollControllers[key],
+            thickness: 6,
+            radius: const Radius.circular(3),
+            thumbVisibility: true,
+            child: ListView.builder(
+              controller: _scrollControllers[key],
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              itemCount: movies.length,
+              itemBuilder: (context, index) {
+                final movie = movies[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => MovieDetailsScreen(
+                                movie: movie,
+                                favoritesService: widget.favoritesService,
                               ),
-                          errorWidget:
-                              (context, url, error) => const Icon(Icons.error),
                         ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: CachedNetworkImage(
+                        imageUrl: movie.posterUrl,
+                        width: 130,
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (context, url) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                        errorWidget:
+                            (context, url, error) => const Icon(Icons.error),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -189,10 +196,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildMovieRow('Popular on Movie Star', _popularMovies),
-                    _buildMovieRow('Now Playing', _nowPlayingMovies),
-                    _buildMovieRow('Top Rated', _topRatedMovies),
-                    _buildMovieRow('Upcoming', _upcomingMovies),
+                    _buildMovieRow(
+                      'Popular on Movie Star',
+                      _popularMovies,
+                      'popular',
+                    ),
+                    _buildMovieRow(
+                      'Now Playing',
+                      _nowPlayingMovies,
+                      'nowPlaying',
+                    ),
+                    _buildMovieRow('Top Rated', _topRatedMovies, 'topRated'),
+                    _buildMovieRow('Upcoming', _upcomingMovies, 'upcoming'),
                   ],
                 ),
               ),
